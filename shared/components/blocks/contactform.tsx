@@ -20,8 +20,8 @@ import {
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Textarea } from "../ui/textarea";
-import { useRef, useState } from "react";
-import ReCAPTCHA from "react-google-recaptcha";
+import { useState } from "react";
+import HCaptcha from "@hcaptcha/react-hcaptcha";
 import { toast } from "sonner";
 import { PAGE_QUERYResult } from "@/sanity.types";
 
@@ -38,8 +38,6 @@ function ContactForm({
 }: ContactFormProps) {
   let imageUrl =
     side_image && side_image.asset?._id ? urlFor(side_image).url() : "";
-  let captchaRef = useRef<ReCAPTCHA>(null);
-
   let [isVerified, setIsverified] = useState(false);
   let [formData, setFormData] = useState({
     email: "",
@@ -54,7 +52,7 @@ function ContactForm({
     e.preventDefault();
 
     if (!isVerified) {
-      toast("Verifica reCAPTCHA fallita, Per favore, completa il reCAPTCHA.");
+      toast("Verifica hCaptcha fallita, Per favore, completa l'hCaptcha.");
       return;
     }
 
@@ -80,7 +78,7 @@ function ContactForm({
       });
   }
 
-  async function handleCaptchaSubmission(token: string | null) {
+  async function handleCaptchaSubmission(token: string) {
     // Server function to verify captcha
     const request = fetch("/api/captcha", {
       method: "POST",
@@ -190,10 +188,11 @@ function ContactForm({
                 />
               </div>
               <div>
-                <ReCAPTCHA
-                  ref={captchaRef}
-                  sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
-                  onChange={handleCaptchaSubmission}
+                <HCaptcha
+                  sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY!}
+                  onVerify={handleCaptchaSubmission}
+                  onExpire={() => setIsverified(false)}
+                  onError={() => setIsverified(false)}
                 />
                 <p className="text-xs my-2">
                   Cliccando "Invia" si dichiara di aver preso visione
