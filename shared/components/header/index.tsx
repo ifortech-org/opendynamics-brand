@@ -1,33 +1,58 @@
+"use client";
+
 import Link from "next/link";
 import LogoDynamic from "@/shared/components/logo-dynamic";
 import MobileNav from "@/shared/components/header/mobile-nav";
 import DesktopNav from "@/shared/components/header/desktop-nav";
 import LanguageSelect from "@/shared/components/header/language-select";
+import { usePathname } from "next/navigation";
 
-const navItems = [
+const baseNavItems = [
   {
-    label: "Home",
+    key: "Home",
     href: "/",
     target: false,
+    label: {it:"Home", en:"Home"}
   },
   {
-    label: "Blog",
+    key: "Blog",
     href: "/blog",
     target: false,
+    label: {it:"Blog", en:"Blog"}
   },
   {
-    label: "About",
+    key: "About",
     href: "/about",
     target: false,
+    label: {it:"About", en:"About"}
   },
 ];
 
+function withEnPrefix(pathname: string) {
+  if (pathname === "/") return "/en/";
+  if (pathname.startsWith("/en/") || pathname === "/en") return pathname;
+  return `/en${pathname}`;
+}
+
 export default function Header() {
+  // Recupera il pathname lato client per reagire ai cambi di navigazione
+  const pathname = usePathname() || "/";
+
+  const isEn = pathname === "/en" || pathname.startsWith("/en/");
+  
+  const navItems = baseNavItems.map((item) => ({
+    key: item.key,
+    target: item.target,
+    href: item.target ? item.href : isEn ? withEnPrefix(item.href) : item.href,
+    label: isEn ? item.label.en : item.label.it,
+  }));
+  const logoHref = isEn ? "/en/" : "/";
+
   return (
     <header className="sticky top-0 w-full border-border/40 bg-background/95 z-50">
       <div className="container flex items-center justify-between h-14">
         <Link
-          href="/"
+          href={logoHref}
           aria-label="Home page"
           className="flex items-center h-14 min-w-[100px] max-w-[180px] xl:max-w-[220px] overflow-visible">
           <LogoDynamic

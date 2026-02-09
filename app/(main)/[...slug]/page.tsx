@@ -10,28 +10,37 @@ export async function generateStaticParams() {
   const pages = await fetchSanityPagesStaticParams();
 
   return pages.map((page) => ({
-    slug: page.slug?.current,
+    slug: page.slug?.current ? page.slug.current.split('/') : [],
   }));
 }
 
+// Permetti di generare pagine non presenti in generateStaticParams on-demand
+export const dynamicParams = true;
+
+// Configurazione ottimale: cache con ISR
+export const dynamic = 'auto';
+export const revalidate = false; // Usa solo webhook per rivalidare
+
 export async function generateMetadata(props: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ slug: string[] }>;
 }) {
   const params = await props.params;
-  const page = await fetchSanityPageBySlug({ slug: params.slug });
+  const slugString = params.slug.join('/');
+  const page = await fetchSanityPageBySlug({ slug: slugString });
 
   if (!page) {
     notFound();
   }
 
-  return generatePageMetadata({ page, slug: params.slug });
+  return generatePageMetadata({ page, slug: slugString });
 }
 
 export default async function Page(props: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ slug: string[] }>;
 }) {
   const params = await props.params;
-  const page = await fetchSanityPageBySlug({ slug: params.slug });
+  const slugString = params.slug.join('/') || '';
+  const page = await fetchSanityPageBySlug({ slug: slugString });
 
   if (!page) {
     notFound();
